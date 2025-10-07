@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace TheyCallMeAlfredUnity
 {
+    [AddComponentMenu("TheyCallMeAlfred/Utils/Animation Trigger")]
     public class AnimationTrigger : MonoBehaviour {
 	[Header( "Animation Settings" )] public Animator animator;
 	public float animationDuration = 3f;

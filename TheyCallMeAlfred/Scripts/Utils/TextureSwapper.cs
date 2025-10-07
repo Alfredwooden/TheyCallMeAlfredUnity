@@ -3,6 +3,7 @@ using System.Collections;
 
 namespace TheyCallMeAlfredUnity
 {
+    [AddComponentMenu("TheyCallMeAlfred/Utils/Texture Swapper")]
     public class TextureSwapper : MonoBehaviour {
 	[Header( "Face Settings" )]
 	public Renderer targetRenderer;

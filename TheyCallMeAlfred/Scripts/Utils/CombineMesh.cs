@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace TheyCallMeAlfredUnity
 {
+    [AddComponentMenu("TheyCallMeAlfred/Utils/Combine Mesh")]
     [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshRenderer))]
     public class CombineMesh : MonoBehaviour

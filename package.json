@@ -1,7 +1,7 @@
 {
   "name": "com.alfredwooden.theycallmealfredunity",
   "version": "0.0.1",
-  "displayName": "TheyCallMeAlfred Helpers",
+  "displayName": "@TheyCallMeAlfredUnity",
   "description": "This is an example package",
   "unity": "2022.1",
   "dependencies": {

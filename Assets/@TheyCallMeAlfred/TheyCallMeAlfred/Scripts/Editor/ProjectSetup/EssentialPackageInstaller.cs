@@ -1,215 +1,214 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using static System.Environment;
-using static System.IO.Path;
+using UnityEngine;
 
 namespace TheyCallMeAlfredUnity.Editor.ProjectSetup {
     public static class EssentialPackageInstaller {
 
+        private static readonly Dictionary<string, (string asset, string folder)> AssetStorePackages = new() {
+            { "vFolders2", ("vFolders 2.unitypackage", "kubacho lab/Editor ExtensionsUtilities") },
+            { "vHierarchy2", ("vHierarchy 2.unitypackage", "kubacho lab/Editor ExtensionsUtilities") },
+            { "vTabs2", ("vTabs 2.unitypackage", "kubacho lab/Editor ExtensionsUtilities") },
+            { "Odin Inspector", ("Odin Inspector and Serializer.unitypackage", "Sirenix/Editor ExtensionsSystem") },
+            { "Odin Validator", ("Odin Validator.unitypackage", "Sirenix/Editor ExtensionsUtilities") },
+            { "Editor Console Pro", ("Editor Console Pro.unitypackage", "FlyingWorm/Editor ExtensionsSystem") },
+            { "PrimeTween", ("PrimeTween High-Performance Animations and Sequences.unitypackage", "Kyrylo Kuzyk/Editor ExtensionsAnimation") },
+            { "Build Uploader", ("Build Uploader.unitypackage", "JamesGamesNZ/Editor ExtensionsUtilities") },
+            { "DOTween Pro", ("DOTween Pro.unitypackage", "Demigiant/Editor ExtensionsVisual Scripting") }
+        };
+
+        private static readonly Dictionary<string, string> GitPackages = new() {
+            { "Unity Utils", "git+https://github.com/adammyhre/Unity-Utils.git" }
+        };
+
+        private static readonly Dictionary<string, string> UnityPackages = new() {
+            { "2D Animation", "com.unity.2d.animation@12.0.2" },
+            { "Addressables", "com.unity.addressables@2.7.4" },
+            { "Behavior", "com.unity.behavior@1.0.12" },
+            { "Cinemachine", "com.unity.cinemachine@3.1.4" },
+            { "Input System", "com.unity.inputsystem@1.15.0" },
+            { "ProBuilder", "com.unity.probuilder@6.0.7" },
+            { "Project Auditor", "com.unity.project-auditor@1.0.2" },
+            { "Render Pipeline URP", "com.unity.render-pipelines.universal@17.2.0" },
+            { "SharpZipLib", "com.unity.sharp-zip-lib@1.4.0" },
+            { "Splines", "com.unity.splines@2.8.2" },
+            { "Visual Effect Graph", "com.unity.visualeffectgraph@17.2.0" }
+        };
+
+        #region Essentials
+        [MenuItem("TheyCallMeAlfred/Setup/Install Essentials")]
+        public static void InstallEssentials() {
+            var essentials = new[] {
+                "vFolders2", "vTabs2", "vHierarchy2", "Editor Console Pro",
+                "Odin Inspector", "Odin Validator", "Cinemachine"
+            };
+
+            string message = "This will install the essential packages:\n\n";
+            foreach (var essential in essentials) {
+                message += $"• {essential}\n";
+            }
+            message += "\nContinue?";
+
+            if (EditorUtility.DisplayDialog("Install Essentials", message, "Install", "Cancel")) {
+                InstallMultiplePackages(essentials);
+            }
+        }
+
+        private static void InstallMultiplePackages(string[] packageNames) {
+            foreach (var packageName in packageNames) {
+                if (AssetStorePackages.ContainsKey(packageName)) {
+                    DownloadAndImportAssetStorePackage(packageName);
+                } else if (UnityPackages.ContainsKey(packageName)) {
+                    InstallUnityPackage(packageName);
+                }
+            }
+        }
+        #endregion
+
+        #region Validation
+        [MenuItem("TheyCallMeAlfred/Setup/Packages/Validate All Packages")]
+        public static void ValidateAllPackages() {
+            string report = "Package Validation Report:\n\n";
+            bool allValid = true;
+
+            report += "Asset Store Packages:\n";
+            foreach (var kvp in AssetStorePackages) {
+                bool exists = AssetImporter.CheckAssetExists(kvp.Value.asset, kvp.Value.folder);
+                string status = exists ? "✓ FOUND" : "✗ MISSING";
+                report += $"  {status} - {kvp.Key}\n";
+                if (!exists) allValid = false;
+            }
+
+            report += "\nGit Packages:\n";
+            foreach (var kvp in GitPackages) {
+                report += $"  ✓ AVAILABLE - {kvp.Key}\n";
+            }
+
+            report += "\nUnity Packages:\n";
+            foreach (var kvp in UnityPackages) {
+                report += $"  ✓ AVAILABLE - {kvp.Key}\n";
+            }
+
+            if (allValid) {
+                report += "\nAll packages are available!";
+            } else {
+                report += "\nSome Asset Store packages are missing from cache.";
+            }
+
+            EditorUtility.DisplayDialog("Package Validation", report, "OK");
+        }
+        #endregion
+
+        #region Asset Store Packages
+        [MenuItem("TheyCallMeAlfred/Setup/Packages/Asset Store/PrimeTween")]
+        public static void ImportPrimeTween() => DownloadAndImportAssetStorePackage("PrimeTween");
+
+        [MenuItem("TheyCallMeAlfred/Setup/Packages/Asset Store/Build Uploader")]
+        public static void ImportBuildUploader() {
+            // Install dependency first
+            InstallUnityPackage("SharpZipLib");
+            // Then install Build Uploader
+            DownloadAndImportAssetStorePackage("Build Uploader");
+        }
+
+        [MenuItem("TheyCallMeAlfred/Setup/Packages/Asset Store/DOTween Pro")]
+        public static void ImportDOTweenPro() => DownloadAndImportAssetStorePackage("DOTween Pro");
+
+
+        private static void OpenAssetStoreWindow() {
+            // Open Unity's Asset Store window
+            EditorApplication.ExecuteMenuItem("Window/Asset Store");
+        }
+
+        private static void DownloadAndImportAssetStorePackage(string packageName) {
+            if (!AssetStorePackages.TryGetValue(packageName, out var package)) {
+                Debug.LogError($"Unknown Asset Store package: {packageName}");
+                return;
+            }
+
+            bool exists = AssetImporter.CheckAssetExists(package.asset, package.folder);
+
+            if (exists) {
+                try {
+                    AssetImporter.ImportAsset(package.asset, package.folder);
+                }
+                catch (Exception e) {
+                    EditorUtility.DisplayDialog($"{packageName} Import Error",
+                        $"Failed to import {packageName}:\n{e.Message}",
+                        "OK");
+                }
+            } else {
+                // Package doesn't exist, guide user through download process
+                EditorUtility.DisplayDialog($"{packageName} Download Required",
+                    $"{packageName} is not in your Asset Store cache.\n\n" +
+                    "Please follow these steps:\n" +
+                    "1. The Asset Store window will open\n" +
+                    "2. Search for and download the package\n" +
+                    "3. Once downloaded, use the 'Import' menu option\n\n" +
+                    "The package will then be available for import.",
+                    "Open Asset Store");
+
+                OpenAssetStoreWindow();
+            }
+        }
+        #endregion
+
         #region Git Packages
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Git/Unity Utils")]
-        public static void InstallUnityUtils() =>
-            PackageManager.InstallPackages(new[] { "git+https://github.com/adammyhre/Unity-Utils.git" });
-        #endregion
+        public static void InstallUnityUtils() => InstallGitPackage("Unity Utils");
 
-        #region Unity Asset Store Packages (Local Files)
-        [MenuItem("TheyCallMeAlfred/Setup/Packages/Asset Store/PrimeTween")]
-        public static void InstallPrimeTween() =>
-            PackageManager.InstallPackages(new[] { "file:../Assets/Plugins/PrimeTween/internal/com.kyrylokuzyk.primetween.tgz" });
-        #endregion
+        private static void InstallGitPackage(string packageName) {
+            if (!GitPackages.TryGetValue(packageName, out var packageUrl)) {
+                Debug.LogError($"Unknown Git package: {packageName}");
+                return;
+            }
 
-        #region Unity Asset Store Packages (Import from Cache)
-        [MenuItem("TheyCallMeAlfred/Setup/Assets/Import vFolders (v2.1.9)")]
-        public static void ImportVFolders() {
-            try {
-                AssetImporter.ImportAsset("vFolders 2.unitypackage", "kubacho lab/Editor ExtensionsUtilities");
-                EditorUtility.DisplayDialog("vFolders Import", "vFolders has been imported successfully!", "OK");
-            }
-            catch (FileNotFoundException) {
-                EditorUtility.DisplayDialog("vFolders Import",
-                    "vFolders package not found in Asset Store cache.\n\n" +
-                    "Please ensure you have downloaded vFolders from the Unity Asset Store first.",
-                    "OK");
-            }
-        }
-
-        [MenuItem("TheyCallMeAlfred/Setup/Assets/Import vHierarchy (v2.1.5)")]
-        public static void ImportVHierarchy() {
-            try {
-                AssetImporter.ImportAsset("vHierarchy 2.unitypackage", "kubacho lab/Editor ExtensionsUtilities");
-                EditorUtility.DisplayDialog("vHierarchy Import", "vHierarchy has been imported successfully!", "OK");
-            }
-            catch (FileNotFoundException) {
-                EditorUtility.DisplayDialog("vHierarchy Import",
-                    "vHierarchy package not found in Asset Store cache.\n\n" +
-                    "Please ensure you have downloaded vHierarchy from the Unity Asset Store first.",
-                    "OK");
-            }
-        }
-
-        [MenuItem("TheyCallMeAlfred/Setup/Assets/Import vTabs (v2.1.3)")]
-        public static void ImportVTabs() {
-            try {
-                AssetImporter.ImportAsset("vTabs 2.unitypackage", "kubacho lab/Editor ExtensionsUtilities");
-                EditorUtility.DisplayDialog("vTabs Import", "vTabs has been imported successfully!", "OK");
-            }
-            catch (FileNotFoundException) {
-                EditorUtility.DisplayDialog("vTabs Import",
-                    "vTabs package not found in Asset Store cache.\n\n" +
-                    "Please ensure you have downloaded vTabs from the Unity Asset Store first.",
-                    "OK");
-            }
-        }
-
-        [MenuItem("TheyCallMeAlfred/Setup/Assets/Import Odin Inspector")]
-        public static void ImportOdinInspector() {
-            try {
-                AssetImporter.ImportAsset("Odin Inspector and Serializer.unitypackage", "Sirenix/Editor ExtensionsSystem");
-                EditorUtility.DisplayDialog("Odin Inspector Import", "Odin Inspector has been imported successfully!", "OK");
-            }
-            catch (FileNotFoundException) {
-                EditorUtility.DisplayDialog("Odin Inspector Import",
-                    "Odin Inspector package not found in Asset Store cache.\n\n" +
-                    "Please ensure you have downloaded Odin Inspector from the Unity Asset Store first.",
-                    "OK");
-            }
-        }
-
-        [MenuItem("TheyCallMeAlfred/Setup/Assets/Import Odin Validator")]
-        public static void ImportOdinValidator() {
-            try {
-                AssetImporter.ImportAsset("Odin Validator.unitypackage", "Sirenix/Editor ExtensionsUtilities");
-                EditorUtility.DisplayDialog("Odin Validator Import", "Odin Validator has been imported successfully!", "OK");
-            }
-            catch (FileNotFoundException) {
-                EditorUtility.DisplayDialog("Odin Validator Import",
-                    "Odin Validator package not found in Asset Store cache.\n\n" +
-                    "Please ensure you have downloaded Odin Validator from the Unity Asset Store first.",
-                    "OK");
-            }
-        }
-
-        [MenuItem("TheyCallMeAlfred/Setup/Assets/Import Editor Console Pro")]
-        public static void ImportEditorConsolePro() {
-            try {
-                AssetImporter.ImportAsset("Editor Console Pro.unitypackage", "FlyingWorm/Editor ExtensionsSystem");
-                EditorUtility.DisplayDialog("Editor Console Pro Import", "Editor Console Pro has been imported successfully!", "OK");
-            }
-            catch (FileNotFoundException) {
-                EditorUtility.DisplayDialog("Editor Console Pro Import",
-                    "Editor Console Pro package not found in Asset Store cache.\n\n" +
-                    "Please ensure you have downloaded Editor Console Pro from the Unity Asset Store first.",
-                    "OK");
-            }
+            PackageManager.InstallPackages(new[] { packageUrl });
         }
         #endregion
 
         #region Unity Built-in Packages
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/2D Animation")]
-        public static void Install2DAnimation() =>
-            PackageManager.InstallPackages(new[] { "com.unity.2d.animation@12.0.2" });
+        public static void Install2DAnimation() => InstallUnityPackage("2D Animation");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Addressables")]
-        public static void InstallAddressables() =>
-            PackageManager.InstallPackages(new[] { "com.unity.addressables@2.7.4" });
+        public static void InstallAddressables() => InstallUnityPackage("Addressables");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Behavior")]
-        public static void InstallBehavior() =>
-            PackageManager.InstallPackages(new[] { "com.unity.behavior@1.0.12" });
+        public static void InstallBehavior() => InstallUnityPackage("Behavior");
 
-        [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Cinemachine")]
-        public static void InstallCinemachine() =>
-            PackageManager.InstallPackages(new[] { "com.unity.cinemachine@3.1.4" });
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Input System")]
-        public static void InstallInputSystem() =>
-            PackageManager.InstallPackages(new[] { "com.unity.inputsystem@1.15.0" });
+        public static void InstallInputSystem() => InstallUnityPackage("Input System");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/ProBuilder")]
-        public static void InstallProBuilder() =>
-            PackageManager.InstallPackages(new[] { "com.unity.probuilder@6.0.7" });
+        public static void InstallProBuilder() => InstallUnityPackage("ProBuilder");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Project Auditor")]
-        public static void InstallProjectAuditor() =>
-            PackageManager.InstallPackages(new[] { "com.unity.project-auditor@1.0.2" });
+        public static void InstallProjectAuditor() => InstallUnityPackage("Project Auditor");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Render Pipeline URP")]
-        public static void InstallURP() =>
-            PackageManager.InstallPackages(new[] { "com.unity.render-pipelines.universal@17.2.0" });
+        public static void InstallURP() => InstallUnityPackage("Render Pipeline URP");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/SharpZipLib")]
-        public static void InstallSharpZipLib() =>
-            PackageManager.InstallPackages(new[] { "com.unity.sharp-zip-lib@1.4.0" });
+        public static void InstallSharpZipLib() => InstallUnityPackage("SharpZipLib");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Splines")]
-        public static void InstallSplines() =>
-            PackageManager.InstallPackages(new[] { "com.unity.splines@2.8.2" });
+        public static void InstallSplines() => InstallUnityPackage("Splines");
 
         [MenuItem("TheyCallMeAlfred/Setup/Packages/Unity/Visual Effect Graph")]
-        public static void InstallVisualEffectGraph() =>
-            PackageManager.InstallPackages(new[] { "com.unity.visualeffectgraph@17.2.0" });
-        #endregion
+        public static void InstallVisualEffectGraph() => InstallUnityPackage("Visual Effect Graph");
 
-        #region Install All Methods
-        [MenuItem("TheyCallMeAlfred/Setup/Install All Git Packages")]
-        public static void InstallAllGitPackages() =>
-            PackageManager.InstallPackages(new[] {
-                "git+https://github.com/adammyhre/Unity-Utils.git"
-            });
-
-        [MenuItem("TheyCallMeAlfred/Setup/Install All Unity Packages")]
-        public static void InstallAllUnityPackages() =>
-            PackageManager.InstallPackages(new[] {
-                "com.unity.2d.animation@12.0.2",
-                "com.unity.addressables@2.7.4",
-                "com.unity.behavior@1.0.12",
-                "com.unity.cinemachine@3.1.4",
-                "com.unity.inputsystem@1.15.0",
-                "com.unity.probuilder@6.0.7",
-                "com.unity.project-auditor@1.0.2",
-                "com.unity.render-pipelines.universal@17.2.0",
-                "com.unity.sharp-zip-lib@1.4.0",
-                "com.unity.splines@2.8.2",
-                "com.unity.visualeffectgraph@17.2.0"
-            });
-
-        [MenuItem("TheyCallMeAlfred/Setup/Import All Asset Store Assets")]
-        public static void ImportAllAssetStoreAssets() {
-            try {
-                AssetImporter.ImportAsset("Odin Inspector and Serializer.unitypackage", "Sirenix/Editor ExtensionsSystem");
-                AssetImporter.ImportAsset("Odin Validator.unitypackage", "Sirenix/Editor ExtensionsUtilities");
-                AssetImporter.ImportAsset("Editor Console Pro.unitypackage", "FlyingWorm/Editor ExtensionsSystem");
-                EditorUtility.DisplayDialog("Asset Store Import", "All Asset Store assets have been imported successfully!", "OK");
+        private static void InstallUnityPackage(string packageName) {
+            if (!UnityPackages.TryGetValue(packageName, out var packageId)) {
+                Debug.LogError($"Unknown Unity package: {packageName}");
+                return;
             }
-            catch (FileNotFoundException ex) {
-                EditorUtility.DisplayDialog("Asset Store Import",
-                    $"Some packages were not found in Asset Store cache:\n{ex.Message}\n\n" +
-                    "Please ensure you have downloaded all required packages from the Unity Asset Store first.",
-                    "OK");
-            }
+
+            PackageManager.InstallPackages(new[] { packageId });
         }
-
-        [MenuItem("TheyCallMeAlfred/Setup/Install All Packages")]
-        public static void InstallAllPackages() =>
-            PackageManager.InstallPackages(new[] {
-                // Git packages
-                "git+https://github.com/adammyhre/Unity-Utils.git",
-                // Asset Store packages (local files)
-                "file:../Assets/Plugins/PrimeTween/internal/com.kyrylokuzyk.primetween.tgz",
-                // Unity packages
-                "com.unity.2d.animation@12.0.2",
-                "com.unity.addressables@2.7.4",
-                "com.unity.behavior@1.0.12",
-                "com.unity.cinemachine@3.1.4",
-                "com.unity.inputsystem@1.15.0",
-                "com.unity.probuilder@6.0.7",
-                "com.unity.project-auditor@1.0.2",
-                "com.unity.render-pipelines.universal@17.2.0",
-                "com.unity.sharp-zip-lib@1.4.0",
-                "com.unity.splines@2.8.2",
-                "com.unity.visualeffectgraph@17.2.0"
-            });
         #endregion
     }
 }

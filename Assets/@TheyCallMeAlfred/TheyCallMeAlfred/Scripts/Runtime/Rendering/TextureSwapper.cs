@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 namespace TheyCallMeAlfredUnity.Rendering {
-    [AddComponentMenu("TheyCallMeAlfred/Rendering/Texture Swapper")]
+    [AddComponentMenu("@TheyCallMeAlfred/Rendering/Texture Swapper")]
     public class TextureSwapper : MonoBehaviour {
         [Header("Face Settings")] public Renderer targetRenderer;
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/alfredwooden/Library/Unity/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

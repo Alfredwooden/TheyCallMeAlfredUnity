@@ -4,7 +4,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 
 namespace TheyCallMeAlfredUnity.Animation {
-    [AddComponentMenu("TheyCallMeAlfred/Animation/Animation Trigger")]
+    [AddComponentMenu("@TheyCallMeAlfred/Animation/Animation Trigger")]
     public class AnimationTrigger : MonoBehaviour {
         [Header("Animation Settings")] public Animator animator;
         public float animationDuration = 3f;

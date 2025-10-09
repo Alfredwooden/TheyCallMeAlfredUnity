@@ -1,7 +1,7 @@
 using UnityEngine;
 
 namespace TheyCallMeAlfredUnity.Meshes {
-    [AddComponentMenu("TheyCallMeAlfred/Mesh/Combine Mesh")]
+    [AddComponentMenu("@TheyCallMeAlfred/Mesh/Combine Mesh")]
     [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshRenderer))]
     public class CombineMesh : MonoBehaviour {

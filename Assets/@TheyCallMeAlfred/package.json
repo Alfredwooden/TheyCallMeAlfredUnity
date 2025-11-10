@@ -1,14 +1,28 @@
 {
   "name": "com.alfredwooden.theycallmealfredunity",
-  "version": "0.0.1",
-  "displayName": "@TheyCallMeAlfredUnity",
-  "description": "This is an example package",
-  "unity": "2022.1",
-  "dependencies": {
-    "com.unity.cinemachine": "3.1.4"
-  },
+  "version": "0.1.0",
+  "displayName": "TheyCallMeAlfred Unity",
+  "description": "A Unity package containing helpful utilities, rendering tools, mesh combiners, and project setup automation.",
+  "unity": "2022.3",
+  "keywords": [
+    "unity",
+    "utilities",
+    "tools",
+    "rendering",
+    "mesh",
+    "animation"
+  ],
   "author": {
     "name": "Alfredo Barros",
+    "email": "contact@example.com",
     "url": "https://github.com/Alfredwooden"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Alfredwooden/TheyCallMeAlfredUnity.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "com.unity.cinemachine": "3.1.4"
   }
 }

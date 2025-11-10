@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "com.kyrylokuzyk.primetween": {
-      "version": "file:../Assets/Plugins/PrimeTween/internal/com.kyrylokuzyk.primetween.tgz",
-      "depth": 0,
-      "source": "local-tarball",
-      "dependencies": {}
-    },
     "com.unity.2d.animation": {
       "version": "12.0.2",
       "depth": 0,
@@ -376,12 +370,6 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
-    },
-    "com.veugeljame.builduploader": {
-      "version": "file:com.veugeljame.builduploader",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",

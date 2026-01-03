@@ -1,3 +1,11 @@
+## 1.2.0 - 03-01-2026
+
+### Added
+
+- **Textures folder**: Added `Textures/Kenney/` folder for reusable texture assets across projects
+
+---
+
 ## 1.1.0 - 08-10-2025
 
 ### Major Refactor - ProjectSetup System
